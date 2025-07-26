@@ -1,17 +1,30 @@
-import React, { useState } from "react";
 
-const CardInfo = ({ username = "morden", initialBalance = 2190.19 }) => {
+import  { useState, useEffect } from "react";
+
+const CardInfo = ({ userId, card = {}, refresh }) => {
   const [cardDetails, setCardDetails] = useState({
-    username,
-    cardNumber: "0818 7183 0713 2514",
-    cvv: "726",
-    expiryDate: "07/10",
-    cardType: "Credit",
-    balance: initialBalance,
+    username: card?.username || "",
+    cardNumber: card?.cardNumber || "",
+    cvv: card?.cvv || "",
+    expiryDate: card?.expiryDate || "",
+    cardType: card?.cardType || "Credit",
+    balance: card?.balance || 0,
   });
 
   const [flipped, setFlipped] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setCardDetails({
+      username: card?.username || "",
+      cardNumber: card?.cardNumber || "",
+      cvv: card?.cvv || "",
+      expiryDate: card?.expiryDate || "",
+      cardType: card?.cardType || "Credit",
+      balance: card?.balance || 0,
+    });
+  }, [card]); 
 
   const toggleFlip = () => setFlipped(!flipped);
   const toggleModal = () => setShowModal(!showModal);
@@ -21,16 +34,47 @@ const CardInfo = ({ username = "morden", initialBalance = 2190.19 }) => {
     setCardDetails((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setShowModal(false);
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setError("Authorization token not found. Please login again.");
+      return;
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/api/user/card", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(cardDetails),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Failed to update card");
+        console.error("Server error:", data.message || res.status);
+        return;
+      }
+
+      setCardDetails(data.card);
+      setShowModal(false);
+      setError("");
+      refresh?.(); 
+    } catch (err) {
+      setError("Something went wrong while updating card info.");
+      console.error("Network error:", err);
+    }
   };
 
   return (
-    <div className="w-full bg-[#fefffd]  p-7 rounded-2xl shadow-md flex flex-col gap-5 relative">
+    <div className="w-full bg-[#fefffd] p-7 rounded-2xl shadow-md flex flex-col gap-5 relative">
       <div className="font-semibold text-[20px] text-gray-900">My Cards</div>
 
-      {/* Flip Card */}
       <div className="relative h-[200px] perspective">
         <div
           className={`transition-transform duration-500 ease-in-out w-full h-full rounded-2xl transform-style preserve-3d ${
@@ -38,38 +82,39 @@ const CardInfo = ({ username = "morden", initialBalance = 2190.19 }) => {
           }`}
           onClick={toggleFlip}
         >
-          {/* Front */}
-          r<div className="absolute inset-0 bg-gradient-to-r from-purple-950 to-purple-600  text-white rounded-2xl p-6 backface-hidden flex flex-col justify-between cursor-pointer">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-950 to-purple-600 text-white rounded-2xl p-6 backface-hidden flex flex-col justify-between cursor-pointer">
             <div className="flex justify-between items-center">
               <div className="w-8 h-6 bg-yellow-400 rounded-sm"></div>
-              <div className="text-sm capitalize">{cardDetails.username}</div>
+              <div className="text-sm capitalize">
+                {cardDetails.username || "Cardholder"}
+              </div>
             </div>
             <div className="text-xl font-bold tracking-widest mt-4">
-              {cardDetails.cardNumber}
+              {cardDetails.cardNumber || "---- ---- ---- ----"}
             </div>
             <div className="flex justify-between text-sm mt-4">
-              <div>{cardDetails.expiryDate}</div>
+              <div>{cardDetails.expiryDate || "MM/YY"}</div>
               <div className="font-semibold">VISA</div>
             </div>
           </div>
 
-          {/* Back */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-950 to-purple-600  text-white rounded-2xl p-6 backface-hidden transform rotate-y-180 flex flex-col justify-center items-center cursor-pointer">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-950 to-purple-600 text-white rounded-2xl p-6 backface-hidden transform rotate-y-180 flex flex-col justify-center items-center cursor-pointer">
             <div className="w-full h-8 bg-white/30 mb-4"></div>
             <div className="text-center">
               <div className="text-sm mb-2">CVV</div>
-              <div className="text-2xl font-bold">{cardDetails.cvv}</div>
+              <div className="text-2xl font-bold">
+                {cardDetails.cvv || "---"}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Card Info */}
       <div className="bg-[#F5F5F5] rounded-2xl p-4 flex justify-between items-center">
         <div>
           <div className="text-[14px] text-[#8B8E99]">Your Balance</div>
           <div className="text-[22px] font-bold text-[#0E1C36]">
-            ${parseFloat(cardDetails.balance).toFixed(2)}
+            ${parseFloat(cardDetails.balance || 0).toFixed(2)}
           </div>
         </div>
         <div className="text-right text-sm text-[#8B8E99]">
@@ -85,7 +130,9 @@ const CardInfo = ({ username = "morden", initialBalance = 2190.19 }) => {
         </div>
         <div>
           Card Type <br />
-          <span className="text-yellow-300 font-semibold">{cardDetails.cardType}</span>
+          <span className="text-yellow-300 font-semibold">
+            {cardDetails.cardType}
+          </span>
         </div>
       </div>
 
@@ -96,11 +143,17 @@ const CardInfo = ({ username = "morden", initialBalance = 2190.19 }) => {
         Edit Card Details
       </button>
 
-      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 w-[90%] max-w-md shadow-lg relative">
-            <h2 className="text-xl font-bold text-[#0E1C36] mb-4">Edit Card Details</h2>
+            <h2 className="text-xl font-bold text-[#0E1C36] mb-4">
+              Edit Card Details
+            </h2>
+
+            {error && (
+              <div className="text-red-600 text-sm mb-2">{error}</div>
+            )}
+
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <input
                 name="username"
@@ -134,18 +187,17 @@ const CardInfo = ({ username = "morden", initialBalance = 2190.19 }) => {
                 name="cardType"
                 value={cardDetails.cardType}
                 onChange={handleChange}
-                placeholder="Card Type (e.g. Credit)"
+                placeholder="Card Type"
                 className="border p-2 rounded"
               />
               <input
                 name="balance"
+                type="number"
                 value={cardDetails.balance}
                 onChange={handleChange}
                 placeholder="Balance"
-                type="number"
                 className="border p-2 rounded"
               />
-
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
