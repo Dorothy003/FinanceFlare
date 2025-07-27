@@ -1,9 +1,10 @@
-
 import React from "react";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 
-export default function StatCards({ balance = 0, income = 0, expenses = 0 }) {
-  const stats = [
+export default function StatCards({ stats }) {
+  const { balance = 0, income = 0, expenses = 0 } = stats;
+
+  const statList = [
     {
       label: "Total Balance",
       value: `$${balance.toLocaleString()}`,
@@ -23,7 +24,7 @@ export default function StatCards({ balance = 0, income = 0, expenses = 0 }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {stats.map((stat) => (
+      {statList.map((stat) => (
         <div
           key={stat.label}
           className="rounded-2xl p-4 shadow-md bg-[#fefffd] text-grey-950 hover:bg-gray-100 hover:text-purple-900 transition-all duration-400"

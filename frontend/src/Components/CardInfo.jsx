@@ -1,7 +1,7 @@
 
 import  { useState, useEffect } from "react";
 
-const CardInfo = ({ userId, card = {}, refresh }) => {
+const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard  }) => {
   const [cardDetails, setCardDetails] = useState({
     username: card?.username || "",
     cardNumber: card?.cardNumber || "",
@@ -32,6 +32,9 @@ const CardInfo = ({ userId, card = {}, refresh }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCardDetails((prev) => ({ ...prev, [name]: value }));
+     if (name === "balance") {
+    onBalanceChange?.(parseFloat(value) || 0);
+  }
   };
 
   const handleSubmit = async (e) => {
@@ -60,11 +63,13 @@ const CardInfo = ({ userId, card = {}, refresh }) => {
         console.error("Server error:", data.message || res.status);
         return;
       }
-
+      setCard(data.card);
+onBalanceChange?.(data.card.balance); // 
       setCardDetails(data.card);
       setShowModal(false);
       setError("");
       refresh?.(); 
+      onBalanceChange?.(parseFloat(data.card.balance || 0));
     } catch (err) {
       setError("Something went wrong while updating card info.");
       console.error("Network error:", err);

@@ -1,5 +1,5 @@
-// src/Pages/Income.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import Header from "../Components/Header";
 import { Bar } from "react-chartjs-2";
 import { saveAs } from "file-saver";
@@ -15,19 +15,71 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 export default function Income() {
-  const [incomeData, setIncomeData] = useState([
-    { id: 1, name: "Salary", amount: 5000, month: "Jan" },
-    { id: 2, name: "Freelance", amount: 3000, month: "Feb" },
-    { id: 3, name: "Consulting", amount: 4500, month: "Mar" },
-  ]);
-
+  const [incomeData, setIncomeData] = useState([]);
   const [newIncome, setNewIncome] = useState({ name: "", amount: "", month: "" });
   const [showForm, setShowForm] = useState(false);
 
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  useEffect(() => {
+    fetchIncomeData();
+  }, []);
+
+const fetchIncomeData = async () => {
+  try {
+    const res = await axios.get("http://localhost:5000/api/income", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+    });
+    //console.log("API response:", res.data); // 👈 debug line
+    setIncomeData(Array.isArray(res.data) ? res.data : []);
+  } catch (err) {
+    console.error("Error fetching income:", err);
+    setIncomeData([]); // fallback to prevent crash
+  }
+};
+
+
+  const handleAddIncome = async () => {
+    if (!newIncome.name || !newIncome.amount || !newIncome.month) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/income", newIncome, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      setIncomeData((prev) => [...prev, res.data]);
+      setNewIncome({ name: "", amount: "", month: "" });
+      setShowForm(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/income/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      setIncomeData((prev) => prev.filter((item) => item._id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDownloadCSV = () => {
+    const csv = [
+      ["Name", "Amount", "Month"],
+      ...incomeData.map((item) => [item.name, item.amount, item.month]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, "income.csv");
+  };
 
   const incomeByMonth = months.map((month) => {
     const total = incomeData
@@ -60,39 +112,6 @@ export default function Income() {
         },
       },
     },
-  };
-
-  const handleAddIncome = () => {
-    if (!newIncome.name || !newIncome.amount || !newIncome.month) {
-      alert("Please fill in all fields.");
-      return;
-    }
-
-    const newEntry = {
-      ...newIncome,
-      id: Date.now(),
-      amount: Number(newIncome.amount),
-    };
-
-    setIncomeData([...incomeData, newEntry]);
-    setNewIncome({ name: "", amount: "", month: "" });
-    setShowForm(false);
-  };
-
-  const handleDelete = (id) => {
-    setIncomeData(incomeData.filter((item) => item.id !== id));
-  };
-
-  const handleDownloadCSV = () => {
-    const csv = [
-      ["Name", "Amount", "Month"],
-      ...incomeData.map((item) => [item.name, item.amount, item.month]),
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, "income.csv");
   };
 
   return (
@@ -165,7 +184,7 @@ export default function Income() {
         <ul className="space-y-2 max-h-64 overflow-y-auto pr-2">
           {incomeData.map((item) => (
             <li
-              key={item.id}
+              key={item._id}
               className="flex justify-between items-center border-b border-gray-300 pb-2"
             >
               <div className="text-gray-900">
@@ -174,7 +193,7 @@ export default function Income() {
               <div className="flex items-center gap-4">
                 <span className="text-green-500 font-medium">+₹{item.amount}</span>
                 <button
-                  onClick={() => handleDelete(item.id)}
+                  onClick={() => handleDelete(item._id)}
                   className="text-sm text-white bg-green-500 px-2 py-1 rounded hover:bg-green-700"
                 >
                   Delete
@@ -189,4 +208,5 @@ export default function Income() {
       </div>
     </div>
   );
+
 }

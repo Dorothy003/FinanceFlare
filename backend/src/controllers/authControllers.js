@@ -2,6 +2,8 @@
 import User from '../models/Users.js';
 import jwt from 'jsonwebtoken';
 
+
+
 export const registerUser = async (req, res) => {
   const { username, email, phoneNumber, password } = req.body;
 
@@ -38,20 +40,4 @@ export const loginUser = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
-};
-
-export const getDashboardData = async (req, res) => {
-  const user = await User.findById(req.user.id);
-  if (!user) return res.status(404).json({ message: "User not found" });
-
-  const income = user.transactions
-    .filter((t) => t.amount.startsWith("+"))
-    .reduce((sum, t) => sum + parseFloat(t.amount.slice(1)), 0);
-  const expense = user.transactions
-    .filter((t) => t.amount.startsWith("-"))
-    .reduce((sum, t) => sum + parseFloat(t.amount.slice(1)), 0);
-
-  const balance = income - expense;
-
-  res.json({ card: user.card, transactions: user.transactions, income, expense, balance });
 };
