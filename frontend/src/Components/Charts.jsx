@@ -1,35 +1,33 @@
-
+// 📁 src/Components/Charts.jsx
+import React from "react";
 import {
+  ResponsiveContainer,
   LineChart,
   Line,
+  CartesianGrid,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
+  Legend,
 } from "recharts";
 
-const data = [
-  { name: "Jan", income: 4000, expenses: 2400 },
-  { name: "Feb", income: 3000, expenses: 1398 },
-  { name: "Mar", income: 2000, expenses: 9800 },
-  { name: "Apr", income: 2780, expenses: 3908 },
-  { name: "May", income: 1890, expenses: 4800 },
-  { name: "Jun", income: 2390, expenses: 3800 },
-];
+export default function Charts({ data }) {
+  const sortedData = [...data].sort((a, b) =>
+    new Date(`1 ${a.month}`) - new Date(`1 ${b.month}`)
+  );
 
-export default function Charts() {
   return (
-    <div className="bg-[#fefffd] rounded-2xl p-4 shadow-md">
-      <h3 className="text-lg font-bold mb-4 text-white">Analytics</h3>
+    <div className="bg-white p-4 rounded-xl shadow-md">
+      <h2 className="text-xl font-semibold mb-4 text-center">Income vs Expense</h2>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data}>
+        <LineChart data={sortedData}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
+          <XAxis dataKey="month" />
           <YAxis />
           <Tooltip />
-          <Line type="monotone" dataKey="income" stroke="green" strokeWidth={2} />
-          <Line type="monotone" dataKey="expenses" stroke="red" strokeWidth={2} />
+          <Legend />
+          <Line type="monotone" dataKey="income" stroke="#4CAF50" strokeWidth={2} />
+          <Line type="monotone" dataKey="expense" stroke="#F44336" strokeWidth={2} />
         </LineChart>
       </ResponsiveContainer>
     </div>

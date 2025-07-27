@@ -1,4 +1,4 @@
-import React from "react";
+
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 
 export default function StatCards({ stats }) {
