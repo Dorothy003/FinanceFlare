@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import userRoute from './routes/userRoute.js';
 import authRoute from './routes/authRoute.js';
 import incomeRoutes from './routes/incomeRoutes.js';
+import expenseRoutes from "./routes/expenseRoute.js";
 dotenv.config();
 
 const app = express();
@@ -17,6 +18,8 @@ app.use(express.json());
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
 app.use('/api/income', incomeRoutes);
+app.use("/api/expense", expenseRoutes);
+
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected');

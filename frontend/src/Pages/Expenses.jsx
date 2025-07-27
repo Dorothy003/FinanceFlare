@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../Components/Header";
 import { saveAs } from "file-saver";
+import axios from "axios";
 import {
   Chart as ChartJS,
   LineElement,
@@ -15,12 +16,7 @@ import { Line } from "react-chartjs-2";
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
 export default function Expense() {
-  const [expenseData, setExpenseData] = useState([
-    { id: 1, name: "Groceries", amount: 2000, category: "Food", month: "Jan" },
-    { id: 2, name: "Electricity Bill", amount: 1500, category: "Utilities", month: "Feb" },
-    { id: 3, name: "Movie", amount: 500, category: "Entertainment", month: "Mar" },
-  ]);
-
+  const [expenseData, setExpenseData] = useState([]);
   const [newExpense, setNewExpense] = useState({ name: "", amount: "", category: "", month: "" });
   const [showForm, setShowForm] = useState(false);
 
@@ -29,6 +25,23 @@ export default function Expense() {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
 
+  // Fetch expenses from backend
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/expense", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setExpenseData(res.data);
+      } catch (err) {
+        console.error("Failed to fetch expenses:", err);
+      }
+    };
+
+    fetchExpenses();
+  }, []);
+
+  // Line chart data
   const expenseByMonth = months.map((month) => {
     return expenseData
       .filter((item) => item.month === month)
@@ -62,26 +75,35 @@ export default function Expense() {
     },
   };
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     const { name, amount, category, month } = newExpense;
     if (!name || !amount || !category || !month) {
       alert("Please fill in all fields.");
       return;
     }
 
-    const newEntry = {
-      ...newExpense,
-      id: Date.now(),
-      amount: Number(amount),
-    };
+    try {
+      const res = await axios.post("http://localhost:5000/api/expense", newExpense, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
 
-    setExpenseData([...expenseData, newEntry]);
-    setNewExpense({ name: "", amount: "", category: "", month: "" });
-    setShowForm(false);
+      setExpenseData((prev) => [...prev, res.data]);
+      setNewExpense({ name: "", amount: "", category: "", month: "" });
+      setShowForm(false);
+    } catch (err) {
+      console.error("Failed to add expense:", err);
+    }
   };
 
-  const handleDelete = (id) => {
-    setExpenseData(expenseData.filter((e) => e.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/expense/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setExpenseData((prev) => prev.filter((item) => item._id !== id));
+    } catch (err) {
+      console.error("Failed to delete expense:", err);
+    }
   };
 
   const handleDownloadCSV = () => {
@@ -173,7 +195,7 @@ export default function Expense() {
         <ul className="space-y-2 max-h-64 overflow-y-auto pr-2">
           {expenseData.map((item) => (
             <li
-              key={item.id}
+              key={item._id}
               className="flex justify-between items-center border-b border-gray-300 pb-2"
             >
               <div>
@@ -182,7 +204,7 @@ export default function Expense() {
               <div className="flex items-center gap-4">
                 <span className="text-red-500 font-medium">-₹{item.amount}</span>
                 <button
-                  onClick={() => handleDelete(item.id)}
+                  onClick={() => handleDelete(item._id)}
                   className="text-sm text-white bg-red-500 px-2 py-1 rounded hover:bg-red-700"
                 >
                   Delete
