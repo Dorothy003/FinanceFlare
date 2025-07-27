@@ -1,12 +1,12 @@
 // src/components/Header.jsx
 import React, { useState } from "react";
-import { Search, Bell, Menu, X, ArrowLeft } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-
+import { Bell, Menu, ArrowLeft } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { User } from "lucide-react";
 export default function Header() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Dashboard");
   const navigate = useNavigate();
+  const location = useLocation();
 
   const menuItems = [
     { label: "Dashboard", path: "/dashboard" },
@@ -16,8 +16,7 @@ export default function Header() {
   ];
 
   const handleMenuClick = (item) => {
-    setActiveTab(item.label);
-    setSidebarOpen(false); // close sidebar
+    setSidebarOpen(false);
     navigate(item.path);
   };
 
@@ -35,17 +34,13 @@ export default function Header() {
 
         <div className="flex items-center gap-4">
           <Bell className="h-5 w-5 cursor-pointer text-[#191919]" />
-          <img
-            src="https://i.pravatar.cc/40"
-            alt="Profile"
-            className="w-9 h-9 rounded-full"
-          />
+          <User className="h-5 w-5 text-[#191919] cursor-pointer" />
         </div>
       </div>
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-[#191919] shadow-lg transform transition-transform duration-300 z-50 ${
+        className={`fixed top-0 left-0 h-full w-64 bg-[#191919]/90 shadow-lg transform transition-transform duration-300 z-50 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -57,19 +52,22 @@ export default function Header() {
           />
         </div>
         <ul className="p-4 space-y-4">
-          {menuItems.map((item) => (
-            <li
-              key={item.label}
-              onClick={() => handleMenuClick(item)}
-              className={`cursor-pointer px-4 py-2 rounded-lg ${
-                activeTab === item.label
-                  ? "bg-blue-900 text-white"
-                  : "text-gray-300 hover:bg-gray-500"
-              }`}
-            >
-              {item.label}
-            </li>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <li
+                key={item.label}
+                onClick={() => handleMenuClick(item)}
+                className={`cursor-pointer px-4 py-2 rounded-lg transition-all ${
+                  isActive
+                    ? "bg-purple-900 text-white"
+                    : "text-gray-300 hover:bg-gray-500"
+                }`}
+              >
+                {item.label}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

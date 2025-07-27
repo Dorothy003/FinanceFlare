@@ -22,6 +22,10 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         const token = localStorage.getItem('token');
+        if (!token) {
+          console.error('No token found in localStorage');
+          return;
+        }
 
         const [dashboardRes, chartRes] = await Promise.all([
           fetch('http://localhost:5000/api/user/dashboard', {
@@ -32,8 +36,21 @@ export default function Dashboard() {
           }),
         ]);
 
+        // Check for 401 or other errors
+        if (!dashboardRes.ok || !chartRes.ok) {
+          console.error('Error fetching dashboard/chart data:', {
+            dashboardStatus: dashboardRes.status,
+            chartStatus: chartRes.status,
+          });
+          return;
+        }
+
         const dashboardData = await dashboardRes.json();
         const chartRawData = await chartRes.json();
+
+        // Logging
+        console.log('Fetched Dashboard Data:', dashboardData);
+        console.log('Fetched Chart Data:', chartRawData);
 
         setCard(dashboardData.card || {});
         setTransactions(dashboardData.transactions || []);
@@ -44,23 +61,23 @@ export default function Dashboard() {
           expenses: dashboardData.totalExpense || 0,
         });
 
+        // Protect against missing chart data
         const mergedChartData = {};
+        const incomeData = chartRawData?.income || [];
+        const expenseData = chartRawData?.expense || [];
 
-        
-        chartRawData.income.forEach((item) => {
+        incomeData.forEach((item) => {
           const month = item._id;
           if (!mergedChartData[month]) mergedChartData[month] = { month };
           mergedChartData[month].income = item.totalIncome;
         });
 
-      
-        chartRawData.expense.forEach((item) => {
+        expenseData.forEach((item) => {
           const month = item._id;
           if (!mergedChartData[month]) mergedChartData[month] = { month };
           mergedChartData[month].expense = item.totalExpense;
         });
 
-    
         const monthOrder = [
           'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'

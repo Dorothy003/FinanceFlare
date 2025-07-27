@@ -1,38 +1,10 @@
-
 import React, { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 export default function TransactionsTable({ transactions = [], refresh }) {
-  const [newTxn, setNewTxn] = useState({ name: "", amount: "", type: "" });
-  const [showForm, setShowForm] = useState(false);
   const [filterType, setFilterType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
-  const handleAdd = async () => {
-    if (!newTxn.name || !newTxn.amount || !newTxn.type) {
-      alert("Please fill all fields.");
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-      await fetch('/api/user/transaction', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
-  },
-  body: JSON.stringify(newTxn),
-});
-
-
-      setNewTxn({ name: "", amount: "", type: "" });
-      setShowForm(false);
-      refresh();
-    } catch (err) {
-      console.error("Error adding transaction", err);
-    }
-  };
+  const [showAll, setShowAll] = useState(false);
 
   const filteredTransactions = transactions.filter((txn) => {
     const matchesType = filterType ? txn.type === filterType : true;
@@ -65,48 +37,15 @@ export default function TransactionsTable({ transactions = [], refresh }) {
             ))}
           </select>
           <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-4 py-1.5 bg-[#f5f5f5] text-gray-900 border border-gray-300 rounded-lg text-sm cursor-pointer"
+            onClick={() => setShowAll(prev => !prev)}
+            className="px-4 py-1.5 bg-[#f5f5f5] text-gray-900 border border-gray-300 rounded-lg text-sm cursor-pointer"
           >
-            <Plus size={16} />
-            Add
+            {showAll ? "Show Less" : "See All Transactions"}
           </button>
         </div>
       </div>
 
-      {showForm && (
-        <div className="bg-gray-50 p-4 rounded-lg mb-4 space-y-2">
-          <input
-            type="text"
-            placeholder="Transaction Name"
-            value={newTxn.name}
-            onChange={(e) => setNewTxn({ ...newTxn, name: e.target.value })}
-            className="w-full px-3 py-2 rounded border"
-          />
-          <input
-            type="text"
-            placeholder="Amount (prefix + or -)"
-            value={newTxn.amount}
-            onChange={(e) => setNewTxn({ ...newTxn, amount: e.target.value })}
-            className="w-full px-3 py-2 rounded border"
-          />
-          <input
-            type="text"
-            placeholder="Type (e.g. Food, Salary)"
-            value={newTxn.type}
-            onChange={(e) => setNewTxn({ ...newTxn, type: e.target.value })}
-            className="w-full px-3 py-2 rounded border"
-          />
-          <button
-            onClick={handleAdd}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
-          >
-            Add Transaction
-          </button>
-        </div>
-      )}
-
-      <div className="overflow-y-auto max-h-64 border rounded-md">
+      <div className={`overflow-y-auto ${showAll ? "max-h-none" : "max-h-64"} border rounded-md`}>
         <table className="w-full text-left text-sm">
           <thead className="sticky top-0 bg-white z-10">
             <tr className="text-gray-600 border-b">

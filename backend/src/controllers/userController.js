@@ -2,14 +2,16 @@
 import Income from '../models/Income.js';
 import Expense from '../models/Expense.js';
 import User from '../models/Users.js';
-import moment from 'moment';
+
 export const getDashboardData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
     if (!user) return res.status(404).json({ message: "User not found" });
+
     const incomes = await Income.find({ user: req.user.id });
     const expenses = await Expense.find({ user: req.user.id });
+
     const totalIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0);
     const totalExpense = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
@@ -18,16 +20,35 @@ export const getDashboardData = async (req, res) => {
     const totalBalance = isIncomeOrExpensePresent
       ? initialBalance + totalIncome - totalExpense
       : initialBalance;
+
+    // 🧠 Format incomes and expenses into one unified transaction array
+    const transactions = [
+      ...incomes.map((i) => ({
+        name: i.name,
+        amount: `+${i.amount}`,
+        date: i.month,
+        type: 'Income',
+        createdAt: i.createdAt,
+      })),
+      ...expenses.map((e) => ({
+        name: e.name,
+        amount: `-${e.amount}`,
+        date: e.month,
+        type: 'Expense',
+        createdAt: e.createdAt,
+      })),
+    ];
+
+    // 🧹 Sort transactions by createdAt descending
+    transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
     res.json({
       card: user.card || {},
       totalIncome,
       totalExpense,
       totalBalance,
-      transactions: [],
-      incomes,      // send raw incomes
-      expenses,
+      transactions,
     });
-
   } catch (error) {
     console.error("Dashboard fetch error:", error);
     res.status(500).json({ message: "Failed to load dashboard" });
@@ -79,33 +100,67 @@ export const updateCard = async (req, res) => {
 
 export const addTransaction = async (req, res) => {
   try {
+    const { name, amount, type } = req.body;
     const userId = req.user.id;
-    const { type, category, amount, note, date } = req.body;
 
-    const newTransaction = {
-      type,
-      category,
-      amount,
-      note,
-      date: date || new Date(),
-    };
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $push: { transactions: newTransaction } },
-      { new: true }
-    );
-
+    const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    res.status(201).json({ transactions: user.transactions });
+    // Build transaction object
+    const newTxn = {
+      name,
+      amount,
+      type,
+      date: new Date().toLocaleDateString(), // or pass `month` if needed
+    };
+console.log("User before push:", user.transactions);
+    // Push into user's transactions array
+    user.transactions.push(newTxn);
+    console.log("User after push:", user.transactions);
+    await user.save();
 
+    res.status(201).json({ message: 'Transaction added', transaction: newTxn });
   } catch (error) {
-    console.error("Add transaction error:", error);
-    res.status(500).json({ message: 'Failed to add transaction' });
+    console.error("Add Transaction Error:", error);
+    res.status(500).json({ message: 'Failed to add transaction', error });
   }
 };
 
+
+
+export const getAllTransactions = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const income = await Income.find({ user: userId }).select('name amount month createdAt').lean();
+    const expenses = await Expense.find({ user: userId }).select('name amount month createdAt').lean();
+
+    const transactions = [
+      ...income.map((i) => ({
+        name: i.name,
+        amount: `+${i.amount}`,
+        date: i.month,
+        type: 'Income',
+        createdAt: i.createdAt,
+      })),
+      ...expenses.map((e) => ({
+        name: e.name,
+        amount: `-${e.amount}`,
+        date: e.month,
+        type: 'Expense',
+        createdAt: e.createdAt,
+      })),
+    ];
+
+    // Sort by createdAt (latest first)
+    transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json(transactions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch transactions' });
+  }
+};
 
 
 export const getChartData = async (req, res) => {
@@ -136,7 +191,7 @@ export const getChartData = async (req, res) => {
 
     res.json({ income: incomeData, expense: expenseData });
   } catch (error) {
-    console.error("❌ Error fetching chart data:", error);
+    console.error(" Error fetching chart data:", error);
     res.status(500).json({ error: "Server Error" });
   }
 };

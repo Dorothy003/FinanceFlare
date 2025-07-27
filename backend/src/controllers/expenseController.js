@@ -1,4 +1,5 @@
 import Expense from "../models/Expense.js";
+import User from '../models/Users.js';  // ✅ Add this line
 
 export const getExpenses = async (req, res) => {
   const expenses = await Expense.find({ user: req.user._id });
