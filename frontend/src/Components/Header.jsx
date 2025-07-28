@@ -17,7 +17,15 @@ export default function Header() {
 
   const handleMenuClick = (item) => {
     setSidebarOpen(false);
+     if (item.label === "Log out") {
+    // Remove the token (and other user-related localStorage if any)
+    localStorage.removeItem("token");
+  console.log("Token after logout:", localStorage.getItem("token"));
+    // Redirect to login
+    navigate("/");
+  } else {
     navigate(item.path);
+  }
   };
 
   return (

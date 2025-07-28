@@ -186,7 +186,7 @@ const handleContribute = async (goalId) => {
                 {!isCompleted && (
                   <div className="mt-4">
                     <div className="flex items-center gap-2">
-                      <PiggyBank size={20} className="text-green-600" />
+                      <PiggyBank size={20} className="text-pink-600" />
                       <input
                         type="number"
                         placeholder="Contribute ₹"
@@ -228,7 +228,7 @@ const handleContribute = async (goalId) => {
 
       {/* Smart Tips */}
       <div>
-        <h2 className="text-lg font-semibold mb-2 text-gray-800 flex items-center gap-2">
+        <h2 className="text-lg font-semibold mb-2 text-yellow-400 flex items-center gap-2">
           <Lightbulb size={20} /> Smart Tips
         </h2>
         <ul className="list-disc pl-5 space-y-1 text-gray-600 text-sm">
