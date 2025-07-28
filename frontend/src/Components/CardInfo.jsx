@@ -64,7 +64,7 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard  }) => 
         return;
       }
       setCard(data.card);
-onBalanceChange?.(data.card.balance); // 
+      onBalanceChange?.(data.card.balance); // 
       setCardDetails(data.card);
       setShowModal(false);
       setError("");

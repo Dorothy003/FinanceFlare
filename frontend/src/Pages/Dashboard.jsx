@@ -17,15 +17,12 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState([]);
+  const [goalChanged, setGoalChanged] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const token = localStorage.getItem('token');
-        if (!token) {
-          console.error('No token found in localStorage');
-          return;
-        }
 
         const [dashboardRes, chartRes] = await Promise.all([
           fetch('http://localhost:5000/api/user/dashboard', {
@@ -36,21 +33,9 @@ export default function Dashboard() {
           }),
         ]);
 
-        // Check for 401 or other errors
-        if (!dashboardRes.ok || !chartRes.ok) {
-          console.error('Error fetching dashboard/chart data:', {
-            dashboardStatus: dashboardRes.status,
-            chartStatus: chartRes.status,
-          });
-          return;
-        }
-
         const dashboardData = await dashboardRes.json();
+        
         const chartRawData = await chartRes.json();
-
-        // Logging
-        console.log('Fetched Dashboard Data:', dashboardData);
-        console.log('Fetched Chart Data:', chartRawData);
 
         setCard(dashboardData.card || {});
         setTransactions(dashboardData.transactions || []);
@@ -61,18 +46,15 @@ export default function Dashboard() {
           expenses: dashboardData.totalExpense || 0,
         });
 
-        // Protect against missing chart data
         const mergedChartData = {};
-        const incomeData = chartRawData?.income || [];
-        const expenseData = chartRawData?.expense || [];
 
-        incomeData.forEach((item) => {
+        chartRawData.income.forEach((item) => {
           const month = item._id;
           if (!mergedChartData[month]) mergedChartData[month] = { month };
           mergedChartData[month].income = item.totalIncome;
         });
 
-        expenseData.forEach((item) => {
+        chartRawData.expense.forEach((item) => {
           const month = item._id;
           if (!mergedChartData[month]) mergedChartData[month] = { month };
           mergedChartData[month].expense = item.totalExpense;
@@ -101,7 +83,7 @@ export default function Dashboard() {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [goalChanged]);
 
   if (loading) {
     return (
@@ -127,14 +109,25 @@ export default function Dashboard() {
           <CardInfo
             card={card}
             setCard={setCard}
-            onBalanceChange={(newBalance) =>
+            onBalanceChange={(newBalance) => {
               setStats((prev) => ({
                 ...prev,
                 balance: parseFloat(newBalance),
-              }))
-            }
+              }));
+              setCard((prev) => ({
+                ...prev,
+                balance:  parseFloat(newBalance),
+              }));
+            }}
           />
-          <GoalsAndTips />
+
+          <GoalsAndTips
+            balance={stats.balance}
+            setBalance={(newBalance) =>
+              setStats((prev) => ({ ...prev, balance: newBalance }))
+            }
+            onGoalUpdate={() => setGoalChanged(!goalChanged)}
+          />
         </div>
       </div>
     </div>

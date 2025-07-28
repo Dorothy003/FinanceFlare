@@ -1,5 +1,5 @@
-// controllers/incomeController.js
 import Income from '../models/Income.js';
+import User from '../models/Users.js';
 
 export const getIncomes = async (req, res) => {
   const incomes = await Income.find({ user: req.user._id });
@@ -8,13 +8,23 @@ export const getIncomes = async (req, res) => {
 
 export const addIncome = async (req, res) => {
   const { name, amount, month } = req.body;
+
   const income = new Income({
     user: req.user._id,
     name,
     amount,
     month,
   });
+
   const saved = await income.save();
+
+  // Update card balance
+  const user = await User.findById(req.user._id);
+  if (user.card) {
+    user.card.balance = (user.card.balance || 0) + Number(amount);
+    await user.save();
+  }
+
   res.status(201).json(saved);
 };
 

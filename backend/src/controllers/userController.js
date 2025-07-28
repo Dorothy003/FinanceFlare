@@ -14,12 +14,7 @@ export const getDashboardData = async (req, res) => {
 
     const totalIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0);
     const totalExpense = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-
-    const initialBalance = user.card?.balance || 0;
-    const isIncomeOrExpensePresent = totalIncome > 0 || totalExpense > 0;
-    const totalBalance = isIncomeOrExpensePresent
-      ? initialBalance + totalIncome - totalExpense
-      : initialBalance;
+    const totalBalance = user.card?.balance || 0;
 
     // 🧠 Format incomes and expenses into one unified transaction array
     const transactions = [
@@ -43,7 +38,14 @@ export const getDashboardData = async (req, res) => {
     transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.json({
-      card: user.card || {},
+      card: {
+        username: user.card?.username || "",
+        cardNumber: user.card?.cardNumber || "",
+        cvv: user.card?.cvv || "",
+        expiryDate: user.card?.expiryDate || "",
+        cardType: user.card?.cardType || "Credit",
+        balance: user.card?.balance || 0,
+      },
       totalIncome,
       totalExpense,
       totalBalance,
@@ -78,6 +80,7 @@ export const updateCard = async (req, res) => {
       userId,
       {
         $set: {
+          "card.username": cardData.username,
           "card.cardNumber": cardData.cardNumber,
           "card.cvv": cardData.cvv,
           "card.expiryDate": cardData.expiryDate,
@@ -113,7 +116,7 @@ export const addTransaction = async (req, res) => {
       type,
       date: new Date().toLocaleDateString(), // or pass `month` if needed
     };
-console.log("User before push:", user.transactions);
+    console.log("User before push:", user.transactions);
     // Push into user's transactions array
     user.transactions.push(newTxn);
     console.log("User after push:", user.transactions);

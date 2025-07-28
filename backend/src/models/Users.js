@@ -35,6 +35,14 @@ const userSchema = new mongoose.Schema({
       date: String,
     },
   ],
+  goals: [
+  {
+    name: { type: String, required: true },
+    target: { type: Number, required: true },
+    saved: { type: Number, default: 0 },
+  }
+],
+
 });
 
 

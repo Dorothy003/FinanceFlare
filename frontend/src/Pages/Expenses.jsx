@@ -15,7 +15,7 @@ import { Line } from "react-chartjs-2";
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend);
 
-export default function Expense() {
+export default function Expense({ onBalanceUpdate }) {
   const [expenseData, setExpenseData] = useState([]);
   const [newExpense, setNewExpense] = useState({ name: "", amount: "", category: "", month: "" });
   const [showForm, setShowForm] = useState(false);
@@ -74,26 +74,29 @@ export default function Expense() {
       },
     },
   };
+const handleAddExpense = async () => {
+  const { name, amount, category, month } = newExpense;
+  if (!name || !amount || !category || !month) {
+    alert("Please fill in all fields.");
+    return;
+  }
 
-  const handleAddExpense = async () => {
-    const { name, amount, category, month } = newExpense;
-    if (!name || !amount || !category || !month) {
-      alert("Please fill in all fields.");
-      return;
-    }
+  try {
+    const res = await axios.post("http://localhost:5000/api/expense", newExpense, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
 
-    try {
-      const res = await axios.post("http://localhost:5000/api/expense", newExpense, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+    setExpenseData((prev) => [...prev, res.data]);
+    setNewExpense({ name: "", amount: "", category: "", month: "" });
+    setShowForm(false);
 
-      setExpenseData((prev) => [...prev, res.data]);
-      setNewExpense({ name: "", amount: "", category: "", month: "" });
-      setShowForm(false);
-    } catch (err) {
-      console.error("Failed to add expense:", err);
-    }
-  };
+    // 👇 trigger balance refresh in Dashboard/CardInfo
+    onBalanceUpdate?.();
+  } catch (err) {
+    console.error("Failed to add expense:", err);
+  }
+};
+
 
   const handleDelete = async (id) => {
     try {

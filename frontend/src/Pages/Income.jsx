@@ -14,7 +14,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-export default function Income() {
+export default function Income({ onBalanceUpdate }) {
   const [incomeData, setIncomeData] = useState([]);
   const [newIncome, setNewIncome] = useState({ name: "", amount: "", month: "" });
   const [showForm, setShowForm] = useState(false);
@@ -40,23 +40,28 @@ const fetchIncomeData = async () => {
 };
 
 
-  const handleAddIncome = async () => {
-    if (!newIncome.name || !newIncome.amount || !newIncome.month) {
-      alert("Please fill in all fields.");
-      return;
-    }
+ const handleAddIncome = async () => {
+  if (!newIncome.name || !newIncome.amount || !newIncome.month) {
+    alert("Please fill in all fields.");
+    return;
+  }
 
-    try {
-      const res = await axios.post("http://localhost:5000/api/income", newIncome, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-      });
-      setIncomeData((prev) => [...prev, res.data]);
-      setNewIncome({ name: "", amount: "", month: "" });
-      setShowForm(false);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  try {
+    const res = await axios.post("http://localhost:5000/api/income", newIncome, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+    });
+
+    setIncomeData((prev) => [...prev, res.data]);
+    setNewIncome({ name: "", amount: "", month: "" });
+    setShowForm(false);
+
+    // 👇 trigger balance refresh in Dashboard/CardInfo
+    onBalanceUpdate?.();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   const handleDelete = async (id) => {
     try {
