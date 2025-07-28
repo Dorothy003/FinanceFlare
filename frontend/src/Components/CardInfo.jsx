@@ -1,7 +1,6 @@
+import { useState } from "react";
 
-import  { useState, useEffect } from "react";
-
-const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard  }) => {
+const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
   const [cardDetails, setCardDetails] = useState({
     username: card?.username || "",
     cardNumber: card?.cardNumber || "",
@@ -15,26 +14,29 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard  }) => 
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    setCardDetails({
-      username: card?.username || "",
-      cardNumber: card?.cardNumber || "",
-      cvv: card?.cvv || "",
-      expiryDate: card?.expiryDate || "",
-      cardType: card?.cardType || "Credit",
-      balance: card?.balance || 0,
-    });
-  }, [card]); 
-
   const toggleFlip = () => setFlipped(!flipped);
-  const toggleModal = () => setShowModal(!showModal);
+
+  const toggleModal = () => {
+    // Reset form only when opening modal
+    if (!showModal) {
+      setCardDetails({
+        username: card?.username || "",
+        cardNumber: card?.cardNumber || "",
+        cvv: card?.cvv || "",
+        expiryDate: card?.expiryDate || "",
+        cardType: card?.cardType || "Credit",
+        balance: card?.balance || 0,
+      });
+    }
+    setShowModal(!showModal);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCardDetails((prev) => ({ ...prev, [name]: value }));
-     if (name === "balance") {
-    onBalanceChange?.(parseFloat(value) || 0);
-  }
+    if (name === "balance") {
+      onBalanceChange?.(parseFloat(value) || 0);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -63,13 +65,13 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard  }) => 
         console.error("Server error:", data.message || res.status);
         return;
       }
+
       setCard(data.card);
-      onBalanceChange?.(data.card.balance); // 
+      onBalanceChange?.(parseFloat(data.card.balance || 0));
       setCardDetails(data.card);
       setShowModal(false);
       setError("");
-      refresh?.(); 
-      onBalanceChange?.(parseFloat(data.card.balance || 0));
+      refresh?.();
     } catch (err) {
       setError("Something went wrong while updating card info.");
       console.error("Network error:", err);
