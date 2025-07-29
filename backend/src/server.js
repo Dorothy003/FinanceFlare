@@ -1,4 +1,4 @@
-// server.js
+
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -19,10 +19,8 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoute);
 app.use('/api/user', userRoute);
-
 app.use('/api/income', incomeRoutes);
 app.use("/api/expense", expenseRoutes);
-
 app.use('/api/user/goals', goalRoutes);
 
 mongoose.connect(process.env.MONGO_URI)

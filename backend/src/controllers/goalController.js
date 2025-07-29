@@ -1,7 +1,7 @@
+//logic for adding goals
 import User from '../models/Users.js';
 import mongoose from "mongoose";
 
-// GET all goals
 export const getGoals = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -11,7 +11,6 @@ export const getGoals = async (req, res) => {
   }
 };
 
-// ADD new goal (limit: 1)
 export const addGoal = async (req, res) => {
   try {
     const { name, target } = req.body;
@@ -26,7 +25,7 @@ export const addGoal = async (req, res) => {
     }
 
     const newGoal = {
-      _id: new mongoose.Types.ObjectId(), // ensure _id exists
+      _id: new mongoose.Types.ObjectId(), 
       name,
       target: Number(target),
       saved: 0,
@@ -40,8 +39,6 @@ export const addGoal = async (req, res) => {
     return res.status(500).json({ message: "Failed to add goal", error });
   }
 };
-
-// UPDATE goal saved amount using goal _id
 export const updateGoal = async (req, res) => {
   try {
     const { amount } = req.body;
@@ -79,7 +76,7 @@ export const updateGoal = async (req, res) => {
   }
 };
 
-// DELETE goal by ID
+// DELETE
 export const deleteGoal = async (req, res) => {
   try {
     const goalId = req.params.goalId;

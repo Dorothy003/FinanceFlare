@@ -91,7 +91,7 @@ const handleContribute = async (goalId) => {
     setBalance(data.balance);
     onGoalUpdate?.();
   } catch (err) {
-    console.error("Unexpected error:", err); // keep for debugging unexpected cases
+    console.error("Unexpected error:", err); 
   }
 };
 
@@ -170,7 +170,7 @@ const handleContribute = async (goalId) => {
               <div key={goal._id || index} className="mb-6">
                 <p className="text-gray-600 text-sm mb-2">
                   Goal: <strong>{goal.name}</strong><br />
-                  Saved: ₹{goal.saved} / ₹{goal.target}
+                  Saved: ${goal.saved} / ${goal.target}
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div
@@ -181,6 +181,9 @@ const handleContribute = async (goalId) => {
                 </div>
                 <p className="text-sm text-gray-500 mt-1">
                   {Math.round(progress)}% completed
+                </p>
+                <p className="text-sm text-red-500 mt-2">
+                  Add ${goal.target - goal.saved} more to reach the goal!
                 </p>
 
                 {!isCompleted && (

@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.get('/', protect, getGoals);
 router.post('/', protect, addGoal);
-router.put('/:goalId', protect, updateGoal);      // update by array index
-router.delete('/:goalId', protect, deleteGoal);   // delete by index
+router.put('/:goalId', protect, updateGoal);      
+router.delete('/:goalId', protect, deleteGoal);  
 
 export default router;

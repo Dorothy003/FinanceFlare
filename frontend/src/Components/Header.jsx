@@ -1,4 +1,4 @@
-// src/components/Header.jsx
+
 import React, { useState } from "react";
 import { Bell, Menu, ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -18,7 +18,7 @@ export default function Header() {
   const handleMenuClick = (item) => {
     setSidebarOpen(false);
      if (item.label === "Log out") {
-    // Remove the token (and other user-related localStorage if any)
+  
     localStorage.removeItem("token");
   console.log("Token after logout:", localStorage.getItem("token"));
     // Redirect to login
@@ -37,7 +37,7 @@ export default function Header() {
             className="text-[#191919] cursor-pointer"
             onClick={() => setSidebarOpen(true)}
           />
-          <h1 className="text-2xl font-bold text-[#191919]">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-[#191919]">FinanceFlare</h1>
         </div>
 
         <div className="flex items-center gap-4">

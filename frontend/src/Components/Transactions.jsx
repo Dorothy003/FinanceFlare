@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Download } from "lucide-react";
 
 export default function TransactionsTable({ transactions = [], refresh }) {
   const [filterType, setFilterType] = useState("");
@@ -14,9 +14,33 @@ export default function TransactionsTable({ transactions = [], refresh }) {
 
   const transactionTypes = [...new Set(transactions.map((txn) => txn.type))];
 
+  const handleDownloadCSV = () => {
+    const headers = ["Name", "Date", "Amount", "Type"];
+    const rows = filteredTransactions.map((txn) => [
+      txn.name,
+      txn.date,
+      txn.amount,
+      txn.type
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "transactions.csv";
+    link.click();
+    
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="bg-[#fefffd] p-6 rounded-2xl shadow-md mt-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
         <h2 className="text-lg font-semibold text-gray-800">Recent Transactions</h2>
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <input
@@ -41,6 +65,13 @@ export default function TransactionsTable({ transactions = [], refresh }) {
             className="px-4 py-1.5 bg-[#f5f5f5] text-gray-900 border border-gray-300 rounded-lg text-sm cursor-pointer"
           >
             {showAll ? "Show Less" : "See All Transactions"}
+          </button>
+          <button
+            onClick={handleDownloadCSV}
+            className="flex items-center gap-1 px-4 py-1.5 bg-purple-600 text-white rounded-lg text-sm hover:bg-green-600"
+          >
+            <Download size={16} />
+            Download CSV
           </button>
         </div>
       </div>

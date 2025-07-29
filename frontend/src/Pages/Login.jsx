@@ -119,8 +119,8 @@ function Login() {
         <div className="absolute inset-0 bg-black/40 clip-diagonal z-10 flex items-center justify-center text-white text-center px-8">
           <div className="z-20">
             <h2 className="text-6xl font-bold mb-4">Welcome Back.</h2>
-            <p className="text-sm max-w-md">
-              Lorem Ex tortor non deposit quid pro quo hic escorol. Olypian quarrels et gorilla congolium.
+            <p className="text-sm max-w-md ">
+             Take control of your spending. Build the life you want.
             </p>
           </div>
         </div>

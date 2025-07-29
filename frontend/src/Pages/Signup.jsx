@@ -130,7 +130,7 @@ const Signup = () => {
 
           <div className="text-sm text-center mt-4 text-black">
             Already have an account?{" "}
-            <a href="/login" className="text-purple-600 underline hover:text-purple-800">
+            <a href="/" className="text-purple-600 underline hover:text-purple-800">
               Sign in
             </a>
           </div>
@@ -145,10 +145,9 @@ const Signup = () => {
           className="object-cover h-full w-full opacity-90"
         />
         <div className="absolute bottom-10 left-10 max-w-sm">
-          <h3 className="text-2xl font-bold mb-2">A special card for you</h3>
+          <h3 className="text-2xl font-bold mb-2">Create your account. Take control of your finances.</h3>
           <p className="text-white text-sm">
-            For someone who deserves something special. Your creativity, kindness, and hard work
-            inspire us every day.
+        Track your income, manage expenses, and plan for a brighter financial future.
           </p>
         </div>
       </div>

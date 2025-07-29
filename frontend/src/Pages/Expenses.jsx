@@ -25,7 +25,6 @@ export default function Expense({ onBalanceUpdate }) {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
 
-  // Fetch expenses from backend
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
@@ -90,7 +89,6 @@ const handleAddExpense = async () => {
     setNewExpense({ name: "", amount: "", category: "", month: "" });
     setShowForm(false);
 
-    // 👇 trigger balance refresh in Dashboard/CardInfo
     onBalanceUpdate?.();
   } catch (err) {
     console.error("Failed to add expense:", err);

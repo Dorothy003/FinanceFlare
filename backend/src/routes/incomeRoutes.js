@@ -1,4 +1,4 @@
-// routes/incomeRoutes.js
+
 import express from 'express';
 import { getIncomes, addIncome, deleteIncome } from '../controllers/incomeController.js';
 import protect from '../middleware/authMiddleware.js';

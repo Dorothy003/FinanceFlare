@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please provide a password'],
   },
   card: {
+    cardHolder: String,
     cardNumber: String,
     expiryDate: String,
     cvv: String,

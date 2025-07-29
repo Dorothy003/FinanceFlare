@@ -16,7 +16,7 @@ export const getDashboardData = async (req, res) => {
     const totalExpense = expenses.reduce((sum, exp) => sum + exp.amount, 0);
     const totalBalance = user.card?.balance || 0;
 
-    // 🧠 Format incomes and expenses into one unified transaction array
+    
     const transactions = [
       ...incomes.map((i) => ({
         name: i.name,
@@ -34,12 +34,12 @@ export const getDashboardData = async (req, res) => {
       })),
     ];
 
-    // 🧹 Sort transactions by createdAt descending
+    // Sort transactions by createdAt descending
     transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.json({
       card: {
-        username: user.card?.username || "",
+        cardHolder: user.card?.cardHolder || "",
         cardNumber: user.card?.cardNumber || "",
         cvv: user.card?.cvv || "",
         expiryDate: user.card?.expiryDate || "",
@@ -73,6 +73,7 @@ export const getCard = async (req, res) => {
 
 export const updateCard = async (req, res) => {
   try {
+   
     const userId = req.user.id;
     const cardData = req.body;
 
@@ -80,7 +81,7 @@ export const updateCard = async (req, res) => {
       userId,
       {
         $set: {
-          "card.username": cardData.username,
+          "card.cardHolder": cardData.cardHolder,
           "card.cardNumber": cardData.cardNumber,
           "card.cvv": cardData.cvv,
           "card.expiryDate": cardData.expiryDate,
@@ -90,6 +91,7 @@ export const updateCard = async (req, res) => {
       },
       { new: true }
     );
+
 
     if (!updatedUser) return res.status(404).json({ message: 'User not found' });
 
@@ -109,12 +111,11 @@ export const addTransaction = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Build transaction object
     const newTxn = {
       name,
       amount,
       type,
-      date: new Date().toLocaleDateString(), // or pass `month` if needed
+      date: new Date().toLocaleDateString(),
     };
     console.log("User before push:", user.transactions);
     // Push into user's transactions array
@@ -128,9 +129,6 @@ export const addTransaction = async (req, res) => {
     res.status(500).json({ message: 'Failed to add transaction', error });
   }
 };
-
-
-
 export const getAllTransactions = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -164,7 +162,6 @@ export const getAllTransactions = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch transactions' });
   }
 };
-
 
 export const getChartData = async (req, res) => {
   try {

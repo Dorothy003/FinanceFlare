@@ -1,3 +1,4 @@
+//logic for expense
 import Expense from "../models/Expense.js";
 import User from '../models/Users.js';
 
@@ -30,10 +31,25 @@ export const addExpense = async (req, res) => {
 };
 
 export const deleteExpense = async (req, res) => {
-  const deleted = await Expense.findOneAndDelete({
-    _id: req.params.id,
-    user: req.user._id,
-  });
-  if (!deleted) return res.status(404).json({ message: "Not found" });
-  res.json({ message: "Deleted" });
+  try {
+    const expense = await Expense.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (user.card) {
+      user.card.balance = (user.card.balance || 0) + Number(expense.amount);
+      await user.save();
+    }
+
+    res.json({ message: 'Expense deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting expense:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 };

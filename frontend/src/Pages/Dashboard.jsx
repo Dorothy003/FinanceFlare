@@ -6,7 +6,7 @@ import Transactions from '../Components/Transactions';
 import CardInfo from '../Components/CardInfo';
 import GoalsAndTips from '../Components/GoalsAndTips';
 
-export default function Dashboard() {
+export default function Dashboard({ user }) {
   const [card, setCard] = useState({});
   const [transactions, setTransactions] = useState([]);
   const [stats, setStats] = useState({
@@ -19,69 +19,69 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [goalChanged, setGoalChanged] = useState(false);
 
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      const [dashboardRes, chartRes] = await Promise.all([
+        fetch('http://localhost:5000/api/user/dashboard', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch('http://localhost:5000/api/user/chartdata', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      const dashboardData = await dashboardRes.json();
+      const chartRawData = await chartRes.json();
+
+      setCard(dashboardData.card || {});
+      setTransactions(dashboardData.transactions || []);
+      setStats({
+        balance: dashboardData.totalBalance || 0,
+        income: dashboardData.totalIncome || 0,
+        interest: dashboardData.totalInterest || 0,
+        expenses: dashboardData.totalExpense || 0,
+      });
+
+      const mergedChartData = {};
+
+      chartRawData.income.forEach((item) => {
+        const month = item._id;
+        if (!mergedChartData[month]) mergedChartData[month] = { month };
+        mergedChartData[month].income = item.totalIncome;
+      });
+
+      chartRawData.expense.forEach((item) => {
+        const month = item._id;
+        if (!mergedChartData[month]) mergedChartData[month] = { month };
+        mergedChartData[month].expense = item.totalExpense;
+      });
+
+      const monthOrder = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+
+      const finalChartData = Object.values(mergedChartData)
+        .map((item) => ({
+          month: item.month,
+          income: item.income || 0,
+          expense: item.expense || 0,
+        }))
+        .sort(
+          (a, b) => monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month)
+        );
+
+      setChartData(finalChartData);
+    } catch (err) {
+      console.error('Failed to load dashboard:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-
-        const [dashboardRes, chartRes] = await Promise.all([
-          fetch('http://localhost:5000/api/user/dashboard', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch('http://localhost:5000/api/user/chartdata', {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        const dashboardData = await dashboardRes.json();
-        
-        const chartRawData = await chartRes.json();
-
-        setCard(dashboardData.card || {});
-        setTransactions(dashboardData.transactions || []);
-        setStats({
-          balance: dashboardData.totalBalance || 0,
-          income: dashboardData.totalIncome || 0,
-          interest: dashboardData.totalInterest || 0,
-          expenses: dashboardData.totalExpense || 0,
-        });
-
-        const mergedChartData = {};
-
-        chartRawData.income.forEach((item) => {
-          const month = item._id;
-          if (!mergedChartData[month]) mergedChartData[month] = { month };
-          mergedChartData[month].income = item.totalIncome;
-        });
-
-        chartRawData.expense.forEach((item) => {
-          const month = item._id;
-          if (!mergedChartData[month]) mergedChartData[month] = { month };
-          mergedChartData[month].expense = item.totalExpense;
-        });
-
-        const monthOrder = [
-          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-        ];
-
-        const finalChartData = Object.values(mergedChartData)
-          .map((item) => ({
-            month: item.month,
-            income: item.income || 0,
-            expense: item.expense || 0,
-          }))
-          .sort((a, b) => monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month));
-
-        setChartData(finalChartData);
-
-      } catch (err) {
-        console.error('Failed to load dashboard:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, [goalChanged]);
 
@@ -116,17 +116,19 @@ export default function Dashboard() {
               }));
               setCard((prev) => ({
                 ...prev,
-                balance:  parseFloat(newBalance),
+                balance: parseFloat(newBalance),
               }));
             }}
           />
 
           <GoalsAndTips
             balance={stats.balance}
-            setBalance={(newBalance) =>
-              setStats((prev) => ({ ...prev, balance: newBalance }))
-            }
+            setBalance={(newBalance) =>{
+              setStats((prev) => ({ ...prev, balance: newBalance }));
+              setCard((prev) => ({ ...prev, balance: newBalance }));
+            }}
             onGoalUpdate={() => setGoalChanged(!goalChanged)}
+            refreshDashboard={fetchDashboardData}
           />
         </div>
       </div>

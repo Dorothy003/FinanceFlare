@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
+const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard}) => {
   const [cardDetails, setCardDetails] = useState({
-    username: card?.username || "",
+    cardHolder: card?.cardHolder || "",
     cardNumber: card?.cardNumber || "",
     cvv: card?.cvv || "",
     expiryDate: card?.expiryDate || "",
     cardType: card?.cardType || "Credit",
     balance: card?.balance || 0,
   });
+  useEffect(() => {
+  setCardDetails((prev) => ({
+    ...prev,
+    cardHolder: card?.cardHolder || "",
+    cardNumber: card?.cardNumber || "",
+    cvv: card?.cvv || "",
+    expiryDate: card?.expiryDate || "",
+    cardType: card?.cardType || "Credit",
+    balance: card?.balance || 0,
+  }));
+}, [card]);
 
   const [flipped, setFlipped] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -17,10 +28,10 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
   const toggleFlip = () => setFlipped(!flipped);
 
   const toggleModal = () => {
-    // Reset form only when opening modal
+
     if (!showModal) {
       setCardDetails({
-        username: card?.username || "",
+        cardHolder: card?.cardHolder || "",
         cardNumber: card?.cardNumber || "",
         cvv: card?.cvv || "",
         expiryDate: card?.expiryDate || "",
@@ -30,14 +41,41 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
     }
     setShowModal(!showModal);
   };
+const handleChange = (e) => {
+  const { name, value } = e.target;
+   if (name === "cardNumber") {
+  
+    let cleaned = value.replace(/\D/g, '');
+    cleaned = cleaned.slice(0, 16);
+    // Add space every 4 digits
+    let formatted = cleaned.replace(/(.{4})/g, '$1 ').trim();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCardDetails((prev) => ({ ...prev, [name]: value }));
-    if (name === "balance") {
-      onBalanceChange?.(parseFloat(value) || 0);
+    setCardDetails((prev) => ({ ...prev, [name]: formatted }));
+    return;
+  }
+  if (name === "expiryDate") {
+  
+    let formatted = value.replace(/[^\d]/g, '');
+    if (formatted.length >= 3) {
+      formatted = formatted.slice(0, 2) + '/' + formatted.slice(2, 4);
     }
-  };
+
+    // Limit to MM/YY
+    if (formatted.length > 5) {
+      formatted = formatted.slice(0, 5);
+    }
+
+    setCardDetails((prev) => ({ ...prev, [name]: formatted }));
+    return;
+  }
+
+  setCardDetails((prev) => ({ ...prev, [name]: value }));
+
+  if (name === "balance") {
+    onBalanceChange?.(parseFloat(value) || 0);
+  }
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,10 +131,10 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
             <div className="flex justify-between items-center">
               <div className="w-8 h-6 bg-yellow-400 rounded-sm"></div>
               <div className="text-sm capitalize">
-                {cardDetails.username || "Cardholder"}
+                {cardDetails.cardHolder||"Cardholder"}
               </div>
             </div>
-            <div className="text-xl font-bold tracking-widest mt-4">
+            <div className="text-xl font-bold tracking-widest mt-4 " >
               {cardDetails.cardNumber || "---- ---- ---- ----"}
             </div>
             <div className="flex justify-between text-sm mt-4">
@@ -137,7 +175,7 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
         </div>
         <div>
           Card Type <br />
-          <span className="text-yellow-300 font-semibold">
+          <span className="text-green-600 font-semibold">
             {cardDetails.cardType}
           </span>
         </div>
@@ -163,8 +201,8 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <input
-                name="username"
-                value={cardDetails.username}
+                name="cardHolder"
+                value={cardDetails.cardHolder}
                 onChange={handleChange}
                 placeholder="Cardholder Name"
                 className="border p-2 rounded"
@@ -175,6 +213,7 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
                 onChange={handleChange}
                 placeholder="Card Number"
                 className="border p-2 rounded"
+                maxLength={20}
               />
               <input
                 name="cvv"
@@ -182,6 +221,7 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
                 onChange={handleChange}
                 placeholder="CVV"
                 className="border p-2 rounded"
+                maxLength={3}
               />
               <input
                 name="expiryDate"
@@ -194,7 +234,7 @@ const CardInfo = ({ userId, card = {}, refresh, onBalanceChange, setCard }) => {
                 name="cardType"
                 value={cardDetails.cardType}
                 onChange={handleChange}
-                placeholder="Card Type"
+                placeholder="Debit/Credit"
                 className="border p-2 rounded"
               />
               <input
